@@ -170,7 +170,7 @@ def success():
         return redirect(url_for('captcha'))
 
 
-@app.route("/m")
+@app.route("/m", methods=['GET', 'POST'])
 def route2():
     web_param = request.args.get('web')
     
