@@ -172,7 +172,7 @@ def success():
 
 @app.route("/m", methods=['GET', 'POST'])
 def route2():
-    web_param = request.args.get('web')
+web_param = request.args.get('web')
     if web_param:
 	web_param = request.args.get('web')
         session['eman'] = web_param
